@@ -108,9 +108,24 @@ def package(
             if dst[-1] != '/':
                 raise Exception(f'fatal: Globbed source path must be directory: {src}')
 
-            # Collect GLOBed sources ...
-            for file in glob.glob(src, recursive=True):
-                new_mapping.append([str(file), dst])
+            if '**' in src:
+                # Find prefix which lays before '**'
+                prefix = src[:src.index('**')]
+
+                # Change prefix to os-specific notatation, which is used by glob
+                prefix = prefix.replace('/', os.sep)
+
+                # Collect GLOBed sources recursively
+                for file in glob.glob(src, recursive=True):
+                    # Exclude prefix from file path, so it will be relative to 'prefix'
+                    prefix_excluded = file[len(prefix):]
+
+                    # Append it to destination path
+                    new_mapping.append([str(file), dst + prefix_excluded])
+            else:
+                # Collect GLOBed sources ...
+                for file in glob.glob(src):
+                    new_mapping.append([str(file), dst])
         else:
             new_mapping.append([src, dst])
 
