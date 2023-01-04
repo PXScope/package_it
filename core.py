@@ -1,16 +1,19 @@
 
 #!/usr/bin/env python3
 import argparse
+import glob
 import shutil
 import os
 import platform
 from typing import Callable
 from pathlib import Path
 
-def cd_to_here():
+def cd_to_here(file, offset: str = None):
     # Work in script directory (basically, workspace root)
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    os.chdir("..")
+    os.chdir(os.path.dirname(os.path.realpath(file)))
+
+    if offset is not None:
+        os.chdir(offset)
 
 def setup_args():
     '''
@@ -39,7 +42,7 @@ def package(
     out_name: str,
     version: str,
     mapping: list[str],
-    archive_out_dir: str,
+    result_dir: str,
 
     build_callback: Callable[[], int] = None,
     no_archive: bool = False,
@@ -73,21 +76,19 @@ def package(
         overwrite = ARGS.overwrite
         no_clean = ARGS.no_clean
 
-    oname = f"{archive_out_dir}/{out_name}-{version}-{prefix}-{platform.system()}-{platform.release()}"
-    pkg_dir = f"target/package/{platform.system()}-{platform.release()}"
+    oname = f"{result_dir}/archive/{out_name}-{version}-{prefix}-{platform.system()}-{platform.release()}"
+    pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}"
 
     oname_platform = oname + (".zip" if platform.system() == "Windows" else ".tar.gz")
 
     if not overwrite and os.path.exists(oname_platform):
-        print(f'fatal: File already exists: {oname}')
-        exit(-1)
+        raise Exception(f'fatal: File already exists: {oname}')
 
     # 1.2. Run build
     if not no_build and build_callback is not None:
         r = build_callback()
         if 0 != r:
-            print(f'fatal: Build script returned error: {r}')
-            exit(-1)
+            raise Exception(f'fatal: Build script returned error: {r}')
 
     # 2.0 Collect all files inside package directory
     non_targets = set([])
@@ -97,16 +98,34 @@ def package(
             for file in files:
                 non_targets.add(os.path.abspath(os.path.join(root, file)))
 
-    # 2.1 Unroll directories into files
+    # Glob source paths
+    new_mapping = []
+    for src, dst in mapping:
+        # Check if 'src' contains '*' or '?'
+        if '*' in src or '?' in src:
+            # dst must be directory name
+            if dst[-1] != '/':
+                raise Exception(f'fatal: Globbed source path must be directory: {src}')
+
+            # Collect GLOBed sources ...
+            for file in glob.glob(src):
+                new_mapping.append([str(file), dst])
+        else:
+            new_mapping.append([src, dst])
+
+    # Replace mapping with globbed one.
+    mapping = new_mapping
+
+    # Unroll directories into files
     unpacked = []
-    for index, (src, dst) in zip(range(len(mapping)), mapping):
+    for _, (src, dst) in zip(range(len(mapping)), mapping):
         if os.path.isfile(src):
             continue
 
         if not dst.endswith('/'):
             dst += '/'
 
-        for root, subdirs, files in os.walk(src):
+        for root, _, files in os.walk(src):
             dst_root = os.path.relpath(root, src)
             for file in files:
                 unpacked.append((os.path.join(root, file), os.path.join(dst, dst_root) + '/'))
@@ -149,13 +168,13 @@ def package(
     # 4. Zip packaged archive
     if no_archive:
         print('info: Skipping archive creation... ')
-        exit(0)
+        return
 
     print(f"info: Archiving output package to {oname}... ")
 
-    os.makedirs('target/archive', exist_ok=True)
+    os.makedirs(f'{result_dir}/archive', exist_ok=True)
     shutil.make_archive(
         oname,
         "zip" if platform.system() == "Windows" else "gztar",
-        f"target/package/{platform.system()}-{platform.release()}/"
+        f"{result_dir}/{platform.system()}-{platform.release()}/"
     )
