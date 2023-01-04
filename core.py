@@ -58,6 +58,7 @@ def package(
         - ["dir_name", "parent_dir_name/"]
         - ["file_name", "changed_file_name"]
         - ["file_name", "parent_dir_name/"]
+        - ["file_name_with_glob", "parent_dir_name/"]
 
     :param src_dir: Source directory
     :param out_name: Output names
@@ -108,7 +109,7 @@ def package(
                 raise Exception(f'fatal: Globbed source path must be directory: {src}')
 
             # Collect GLOBed sources ...
-            for file in glob.glob(src):
+            for file in glob.glob(src, recursive=True):
                 new_mapping.append([str(file), dst])
         else:
             new_mapping.append([src, dst])
