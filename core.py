@@ -8,14 +8,14 @@ import platform
 from typing import Callable
 from pathlib import Path
 
-def cd_to_here(file, offset: str = None):
+def cd_to_here(file, chdir_offset: str = None):
     # Work in script directory (basically, workspace root)
     os.chdir(os.path.dirname(os.path.realpath(file)))
 
-    if offset is not None:
-        os.chdir(offset)
+    if chdir_offset is not None:
+        os.chdir(chdir_offset)
 
-def setup_args():
+def setup_args() -> str:
     '''
     Startup script. You can skip this if you want to feed parameters directly.
 
@@ -37,6 +37,10 @@ def setup_args():
     return prefix
 
 
+def setup(file: str, chdir_offset: str = None) -> str:
+    cd_to_here(file, chdir_offset)
+    return setup_args()
+
 def package(
     prefix: str,
     out_name: str,
@@ -49,16 +53,16 @@ def package(
     no_build: bool = False,
     overwrite: bool = False,
     no_clean: bool = False
-):
+) -> str:
     """
     Run packaging script
 
     Mapping rule:
-        - ["dir_name", "changed_dir_name"] 
-        - ["dir_name", "parent_dir_name/"]
-        - ["file_name", "changed_file_name"]
-        - ["file_name", "parent_dir_name/"]
-        - ["file_name_with_glob", "parent_dir_name/"]
+        - ["dir_name", "changed_dir_name"]: Copy directory contents into changed directory name
+        - ["dir_name", "parent_dir_name/"]: Copy directory contents under parent directory
+        - ["file_name", "changed_file_name"]: Copy file into changed file name
+        - ["file_name", "parent_dir_name/"]: Copy file under parent directory
+        - ["file_name_with_glob", "parent_dir_name/"]: Copy all files that match glob under parent directory
 
     :param src_dir: Source directory
     :param out_name: Output names
