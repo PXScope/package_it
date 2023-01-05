@@ -72,10 +72,9 @@ def package(
     :return: None
     """
 
-    global ARGS
-    args = ARGS
-
-    if ARGS is not None:
+    
+    if 'ARGS' in globals():
+        global ARGS
         no_archive = ARGS.no_archive
         no_build = ARGS.no_build
         overwrite = ARGS.overwrite
@@ -143,7 +142,7 @@ def package(
             continue
 
         if not dst.endswith('/'):
-            dst += '/'
+            print('fatal: Directory source must be suffixed with "/": ' + src)
 
         for root, _, files in os.walk(src):
             dst_root = os.path.relpath(root, src)
