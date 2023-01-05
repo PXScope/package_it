@@ -53,7 +53,7 @@ def package(
     no_build: bool = False,
     overwrite: bool = False,
     no_clean: bool = False
-) -> str:
+) :
     """
     Run packaging script
 
@@ -72,7 +72,7 @@ def package(
     :return: None
     """
 
-    
+
     if 'ARGS' in globals():
         global ARGS
         no_archive = ARGS.no_archive
@@ -81,7 +81,7 @@ def package(
         no_clean = ARGS.no_clean
 
     oname = f"{result_dir}/archive/{out_name}-{version}-{prefix}-{platform.system()}-{platform.release()}"
-    pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}"
+    pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}"
 
     oname_platform = oname + (".zip" if platform.system() == "Windows" else ".tar.gz")
 
@@ -195,5 +195,5 @@ def package(
     shutil.make_archive(
         oname,
         "zip" if platform.system() == "Windows" else "gztar",
-        f"{result_dir}/{platform.system()}-{platform.release()}/"
+        f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}"
     )
