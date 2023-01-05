@@ -30,6 +30,7 @@ def setup_args() -> str:
     parser.add_argument('--no-build', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--no-clean', action='store_true')
+    parser.add_argument('--allow-empty-dir', action='store_true')
 
     global ARGS
     ARGS = parser.parse_args()
@@ -52,8 +53,9 @@ def package(
     no_archive: bool = False,
     no_build: bool = False,
     overwrite: bool = False,
-    no_clean: bool = False
-) :
+    no_clean: bool = False,
+    allow_empty_dir: bool = False
+) -> str:
     """
     Run packaging script
 
@@ -72,13 +74,13 @@ def package(
     :return: None
     """
 
-
     if 'ARGS' in globals():
         global ARGS
-        no_archive = ARGS.no_archive
-        no_build = ARGS.no_build
-        overwrite = ARGS.overwrite
-        no_clean = ARGS.no_clean
+        no_archive |= ARGS.no_archive
+        no_build |= ARGS.no_build
+        overwrite |= ARGS.overwrite
+        no_clean |= ARGS.no_clean
+        allow_empty_dir |= ARGS.allow_empty_dir
 
     oname = f"{result_dir}/archive/{out_name}-{version}-{prefix}-{platform.system()}-{platform.release()}"
     pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}"
@@ -183,6 +185,13 @@ def package(
     for non_target in non_targets:
         print(f"-- Remove excluded: {os.path.relpath(non_target, os.path.abspath( os.curdir))}")
         os.remove(non_target)
+
+    # 3.2. Remove empty directories
+    if not allow_empty_dir:
+        for root, _, _ in os.walk(pkg_dir, topdown=False):
+            if len(os.listdir(root)) == 0:
+                print(f"-- Remove empty: {os.path.relpath(root, os.path.abspath(os.curdir))}")
+                os.rmdir(root)
 
     # 4. Zip packaged archive
     if no_archive:
