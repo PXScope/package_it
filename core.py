@@ -49,6 +49,8 @@ def package(
     mapping: list[str],
     result_dir: str,
 
+    quick_copy_dirs: list[str],
+
     build_callback: Callable[[], int] = None,
     no_archive: bool = False,
     no_build: bool = False,
@@ -192,6 +194,11 @@ def package(
             if len(os.listdir(root)) == 0:
                 print(f"-- Remove empty: {os.path.relpath(root, os.path.abspath(os.curdir))}")
                 os.rmdir(root)
+
+    # 3.3. bonus addtional libs
+    for dir in quick_copy_dirs:
+        print(f"++ Copying result to {pkg_dir} ...")
+        shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
 
     # 4. Zip packaged archive
     if no_archive:
