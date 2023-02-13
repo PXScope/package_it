@@ -49,7 +49,7 @@ def package(
     mapping: list[str],
     result_dir: str,
 
-    quick_copy_dirs: list[str],
+    quick_copy_dirs: list[str] = [],
 
     build_callback: Callable[[], int] = None,
     no_archive: bool = False,
