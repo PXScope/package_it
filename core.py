@@ -87,7 +87,7 @@ def package(
 
     oname_platform = oname + (".zip" if platform.system() == "Windows" else ".tar.gz")
 
-    if not overwrite and os.path.exists(oname_platform):
+    if not overwrite and not no_archive and os.path.exists(oname_platform):
         raise Exception(f'fatal: File already exists: {oname}')
 
     # 1.2. Run build
