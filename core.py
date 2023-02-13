@@ -83,7 +83,7 @@ def package(
         allow_empty_dir |= ARGS.allow_empty_dir
 
     oname = f"{result_dir}/archive/{out_name}-{version}-{prefix}-{platform.system()}-{platform.release()}"
-    pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}"
+    pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}-{prefix}"
 
     oname_platform = oname + (".zip" if platform.system() == "Windows" else ".tar.gz")
 
@@ -204,5 +204,5 @@ def package(
     shutil.make_archive(
         oname,
         "zip" if platform.system() == "Windows" else "gztar",
-        f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}"
+        pkg_dir
     )
