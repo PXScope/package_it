@@ -197,7 +197,7 @@ def package(
 
     # 3.3. bonus addtional libs
     for dir in quick_copy_dirs:
-        print(f"++ Copying result to {pkg_dir} ...")
+        print(f"++ Copying result to {dir} ...")
         shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
 
     # 4. Zip packaged archive
