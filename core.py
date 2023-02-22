@@ -5,7 +5,7 @@ import glob
 import shutil
 import os
 import platform
-from typing import Callable
+from typing import Callable, List
 from pathlib import Path
 
 def cd_to_here(file, chdir_offset: str = None):
@@ -46,10 +46,10 @@ def package(
     prefix: str,
     out_name: str,
     version: str,
-    mapping: list[str],
+    mapping: List[str],
     result_dir: str,
 
-    quick_copy_dirs: list[str] = [],
+    quick_copy_dirs: List[str] = [],
 
     build_callback: Callable[[], int] = None,
     no_archive: bool = False,
