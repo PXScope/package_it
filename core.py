@@ -31,6 +31,7 @@ def setup_args() -> str:
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--no-clean', action='store_true')
     parser.add_argument('--allow-empty-dir', action='store_true')
+    parser.add_argument('--version-suffix', '-V', dest='version_suffix', default=None, type=str)
 
     global ARGS
     ARGS = parser.parse_args()
@@ -56,7 +57,8 @@ def package(
     no_build: bool = False,
     overwrite: bool = False,
     no_clean: bool = False,
-    allow_empty_dir: bool = False
+    allow_empty_dir: bool = False,
+    version_suffix: str = None,
 ) -> str:
     """
     Run packaging script
@@ -83,8 +85,10 @@ def package(
         overwrite |= ARGS.overwrite
         no_clean |= ARGS.no_clean
         allow_empty_dir |= ARGS.allow_empty_dir
+        if ARGS.version_suffix is not None:
+            version_suffix = ARGS.version_suffix
 
-    oname = f"{result_dir}/archive/{out_name}-{version}-{prefix}-{platform.system()}-{platform.release()}"
+    oname = f"{result_dir}/archive/{out_name}-{version}{version_suffix if version_suffix is not None else ''}-{prefix}-{platform.system()}-{platform.release()}"
     pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}-{prefix}"
 
     oname_platform = oname + (".zip" if platform.system() == "Windows" else ".tar.gz")
