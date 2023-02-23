@@ -40,7 +40,7 @@ class ArgInit:
             help='A string which is suffixed after version number. e.g. "rc1"')
 
         args = parser.parse_args()
-        self.parse_result = args
+        self.args = args
         self.prefix: str = args.prefix
         self.no_archive: bool = args.no_archive
         self.no_build: bool = args.no_build
