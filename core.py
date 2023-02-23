@@ -15,6 +15,45 @@ def cd_to_here(file, chdir_offset: str = None):
     if chdir_offset is not None:
         os.chdir(chdir_offset)
 
+class ArgInit:
+    static_field = ""
+    def __init__(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            'prefix', help='A mandatory build type prefix string')
+        parser.add_argument(
+            '--no-archive', action='store_true',
+            help='Do not make archive')
+        parser.add_argument(
+            '--no-build', action='store_true',
+            help='Do not run build script')
+        parser.add_argument(
+            '--overwrite', action='store_true',
+            help='Overwrite exsiting archive')
+        parser.add_argument(
+            '--no-clean', action='store_true',
+            help='Do not clean up unpacked content')
+        parser.add_argument(
+            '--allow-empty-dir', action='store_true',
+            help='Allow empty directory result')
+        parser.add_argument(
+            '--version-suffix', '-V', dest='version_suffix', default=None, type=str,
+            help='A string which is suffixed after version number. e.g. "rc1"')
+
+        args = parser.parse_args()
+        self.parse_result = args
+        self.prefix: str = args.prefix
+        self.no_archive: bool = args.no_archive
+        self.no_build: bool = args.no_build
+        self.overwrite: bool = args.overwrite
+        self.no_clean: bool = args.no_clean
+        self.allow_empty_dir: bool = args.allow_empty_dir
+        self.version_suffix: str or None = args.version_suffix
+
+def init_with_args(parser: argparse.ArgumentParser) -> ArgInit:
+    global ARGINIT
+    ARGINIT = ArgInit(parser)
+    return ARGINIT
+
 def setup_args() -> str:
     '''
     Startup script. You can skip this if you want to feed parameters directly.
@@ -24,24 +63,20 @@ def setup_args() -> str:
     print(f"info: Working from directory '{os.path.abspath(os.curdir)}'...")
 
     # Parse arguments
-    parser = argparse.ArgumentParser(prog="PxRabbit Package Generator")
-    parser.add_argument('prefix')
-    parser.add_argument('--no-archive', action='store_true')
-    parser.add_argument('--no-build', action='store_true')
-    parser.add_argument('--overwrite', action='store_true')
-    parser.add_argument('--no-clean', action='store_true')
-    parser.add_argument('--allow-empty-dir', action='store_true')
-    parser.add_argument('--version-suffix', '-V', dest='version_suffix', default=None, type=str)
-
-    global ARGS
-    ARGS = parser.parse_args()
-    prefix: str = ARGS.prefix
-    return prefix
+    init = init_with_args(argparse.ArgumentParser())
+    return init.prefix
 
 
 def setup(file: str, chdir_offset: str = None) -> str:
     cd_to_here(file, chdir_offset)
     return setup_args()
+
+def setup_with_args(
+        file: str,
+        parser: argparse.ArgumentParser = argparse.ArgumentParser(),
+        chdir_offset: str = None):
+    cd_to_here(file, chdir_offset)
+    return init_with_args(parser)
 
 def package(
     prefix: str,
@@ -78,15 +113,15 @@ def package(
     :return: None
     """
 
-    if 'ARGS' in globals():
-        global ARGS
-        no_archive |= ARGS.no_archive
-        no_build |= ARGS.no_build
-        overwrite |= ARGS.overwrite
-        no_clean |= ARGS.no_clean
-        allow_empty_dir |= ARGS.allow_empty_dir
-        if ARGS.version_suffix is not None:
-            version_suffix = ARGS.version_suffix
+    if 'ARGINIT' in globals():
+        global ARGINIT
+        no_archive |= ARGINIT.no_archive
+        no_build |= ARGINIT.no_build
+        overwrite |= ARGINIT.overwrite
+        no_clean |= ARGINIT.no_clean
+        allow_empty_dir |= ARGINIT.allow_empty_dir
+        if ARGINIT.version_suffix is not None:
+            version_suffix = ARGINIT.version_suffix
 
     oname = f"{result_dir}/archive/{out_name}-{version}{version_suffix if version_suffix is not None else ''}-{prefix}-{platform.system()}-{platform.release()}"
     pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}-{prefix}"
