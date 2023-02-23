@@ -5,6 +5,7 @@ import glob
 import shutil
 import os
 import platform
+import sys
 from typing import Callable, List
 from pathlib import Path
 
@@ -93,6 +94,7 @@ def package(
     result_dir: str,
 
     quick_copy_dirs: List[str] = [],
+    archive_copy_dirs: List[str] = [],
 
     build_callback: Callable[[], int] = None,
     no_archive: bool = False,
@@ -243,15 +245,17 @@ def package(
 
     # 3.3. bonus addtional libs
     for dir in quick_copy_dirs:
-        print(f"++ Copying result to {dir} ...")
+        print(f"  ++ copying package contents -> {dir} ... ", end='')
         shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
+        print(f" done.")
 
     # 4. Zip packaged archive
     if no_archive:
-        print('info: Skipping archive creation... ')
+        print('info: skipping archive creation ... ')
         return
 
-    print(f"info: Archiving output package to {oname}... ")
+    print(f"info: archiving output package to {oname} ... ", end='')
+    sys.stdout.flush()
 
     os.makedirs(f'{result_dir}/archive', exist_ok=True)
     shutil.make_archive(
@@ -259,6 +263,12 @@ def package(
         "zip" if platform.system() == "Windows" else "gztar",
         pkg_dir
     )
+    print(f" done.")
+
+    for dir in archive_copy_dirs:
+        print(f"  ++ copying archive -> {dir} ... ", end='')
+        shutil.copy(oname_platform, dir)
+        print(f" done.")
 
     return PackageResult(
         oname=oname_platform,
