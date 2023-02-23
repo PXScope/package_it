@@ -262,4 +262,5 @@ def package(
 
     return PackageResult(
         oname=oname_platform,
-        pkg_dir=pkg_dir)
+        pkg_dir=pkg_dir
+    )
