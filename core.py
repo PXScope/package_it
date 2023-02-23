@@ -78,6 +78,13 @@ def setup_with_args(
     cd_to_here(file, chdir_offset)
     return init_with_args(parser)
 
+class PackageResult:
+    def __init__(
+            self,
+            oname: str, pkg_dir: str) -> None:
+        self.oname = oname
+        self.pkg_dir = pkg_dir
+
 def package(
     prefix: str,
     out_name: str,
@@ -220,7 +227,7 @@ def package(
         print(f"Installing: {os.path.relpath(dst, pkg_dir)}")
         os.makedirs(os.path.dirname(dst), exist_ok=True)
 
-        dst_path = shutil.copy(src, dst)
+        shutil.copy(src, dst)
 
     # 3.1. Exclude all non-targets
     for non_target in non_targets:
@@ -252,3 +259,7 @@ def package(
         "zip" if platform.system() == "Windows" else "gztar",
         pkg_dir
     )
+
+    return PackageResult(
+        oname=oname_platform,
+        pkg_dir=pkg_dir)
