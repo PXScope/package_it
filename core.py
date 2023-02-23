@@ -89,7 +89,7 @@ def package(
     prefix: str,
     out_name: str,
     version: str,
-    mapping: List[str],
+    mapping: List[tuple[str, str]],
     result_dir: str,
 
     quick_copy_dirs: List[str] = [],
@@ -101,7 +101,7 @@ def package(
     no_clean: bool = False,
     allow_empty_dir: bool = False,
     version_suffix: str = None,
-) -> str:
+) -> PackageResult or None:
     """
     Run packaging script
 
