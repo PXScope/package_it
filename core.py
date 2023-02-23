@@ -221,13 +221,14 @@ def package(
         try:
             # Skip by comparing mtime ...
             if os.path.isdir(src) or os.path.getmtime(src) < os.path.getmtime(dst):
-                print(f"Skipped: {dst_src}")
+                print(f"Up-to-date: {dst_src}")
                 continue
         except:
             pass
 
-        print(f"Installing: {os.path.relpath(dst, pkg_dir)}")
+        print(f"* Installing: {os.path.relpath(dst, pkg_dir)} ... ", end='', flush=True)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
+        print("done.")
 
         shutil.copy(src, dst)
 
@@ -245,17 +246,16 @@ def package(
 
     # 3.3. bonus addtional libs
     for dir in quick_copy_dirs:
-        print(f"  ++ copying package contents -> {dir} ... ", end='')
+        print(f"  ++ copying package contents -> {dir} ... ", end='', flush=True)
         shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
-        print(f" done.")
+        print(f"done.")
 
     # 4. Zip packaged archive
     if no_archive:
         print('info: skipping archive creation ... ')
         return
 
-    print(f"info: archiving output package to {oname} ... ", end='')
-    sys.stdout.flush()
+    print(f"info: archiving output package to {oname} ... ", end='', flush=True)
 
     os.makedirs(f'{result_dir}/archive', exist_ok=True)
     shutil.make_archive(
@@ -263,12 +263,12 @@ def package(
         "zip" if platform.system() == "Windows" else "gztar",
         pkg_dir
     )
-    print(f" done.")
+    print(f"done.")
 
     for dir in archive_copy_dirs:
-        print(f"  ++ copying archive -> {dir} ... ", end='')
+        print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
         shutil.copy(oname_platform, dir)
-        print(f" done.")
+        print(f"done.")
 
     return PackageResult(
         oname=oname_platform,
