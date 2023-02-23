@@ -6,7 +6,7 @@ import shutil
 import os
 import platform
 import sys
-from typing import Callable, List
+from typing import Callable, List, Tuple
 from pathlib import Path
 
 def cd_to_here(file, chdir_offset: str = None):
@@ -90,7 +90,7 @@ def package(
     prefix: str,
     out_name: str,
     version: str,
-    mapping: List[tuple[str, str]],
+    mapping: List[Tuple[str, str]],
     result_dir: str,
 
     quick_copy_dirs: List[str] = [],
