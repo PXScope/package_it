@@ -97,6 +97,9 @@ def package(
     archive_copy_dirs: List[str] = [],
 
     build_callback: Callable[[], int] = None,
+    package_dir_callback: Callable[[str], None] = None,
+    archive_file_callback: Callable[[str], None] = None,
+
     no_archive: bool = False,
     no_build: bool = False,
     overwrite: bool = False,
@@ -264,6 +267,12 @@ def package(
         pkg_dir
     )
     print(f"done.")
+
+    if package_dir_callback:
+        package_dir_callback(pkg_dir)
+
+    if archive_file_callback:
+        archive_file_callback(oname_platform)
 
     for dir in archive_copy_dirs:
         print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
