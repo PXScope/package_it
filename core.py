@@ -5,6 +5,7 @@ import glob
 import shutil
 import os
 import platform
+import subprocess
 import sys
 from typing import Callable, List, Tuple
 from pathlib import Path
@@ -39,6 +40,10 @@ class ArgInit:
         parser.add_argument(
             '--version-suffix', '-V', dest='version_suffix', default=None, type=str,
             help='A string which is suffixed after version number. e.g. "rc1"')
+        parser.add_argument(
+            '--git-tag', action='store_true',
+            help='Allow empty directory result'
+        )
 
         args = parser.parse_args()
         self.args = args
@@ -47,6 +52,7 @@ class ArgInit:
         self.no_build: bool = args.no_build
         self.overwrite: bool = args.overwrite
         self.no_clean: bool = args.no_clean
+        self.auto_git_tag: bool = args.git_tag
         self.allow_empty_dir: bool = args.allow_empty_dir
         self.version_suffix: str or None = args.version_suffix
 
@@ -105,6 +111,7 @@ def package(
     overwrite: bool = False,
     no_clean: bool = False,
     allow_empty_dir: bool = False,
+    auto_git_tag: bool = False,
     version_suffix: str = None,
 ) -> PackageResult or None:
     """
@@ -132,10 +139,12 @@ def package(
         overwrite |= ARGINIT.overwrite
         no_clean |= ARGINIT.no_clean
         allow_empty_dir |= ARGINIT.allow_empty_dir
+        auto_git_tag |= ARGINIT.auto_git_tag
         if ARGINIT.version_suffix is not None:
             version_suffix = ARGINIT.version_suffix
 
-    oname = f"{result_dir}/archive/{out_name}-{version}{version_suffix if version_suffix is not None else ''}-{prefix}-{platform.system()}-{platform.release()}"
+    version_tag = version_suffix if version_suffix is not None else ''
+    oname = f"{result_dir}/archive/{out_name}-{version}{version_tag}-{prefix}-{platform.system()}-{platform.release()}"
     pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}-{prefix}"
 
     oname_platform = oname + (".zip" if platform.system() == "Windows" else ".tar.gz")
@@ -277,6 +286,11 @@ def package(
     for dir in archive_copy_dirs:
         print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
         shutil.copy(oname_platform, dir)
+        print(f"done.")
+
+    if auto_git_tag:
+        print(f"info: tagging git repository with {version} ... ", end='', flush=True)
+        subprocess.run(['git', 'tag', f'v{version}{version_tag}'])
         print(f"done.")
 
     return PackageResult(
