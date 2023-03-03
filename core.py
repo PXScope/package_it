@@ -289,7 +289,7 @@ def package(
         print(f"done.")
 
     if auto_git_tag:
-        print(f"info: tagging git repository with {version} ... ", end='', flush=True)
+        print(f"info: tagging git repository with {version}{version_tag} ... ", end='', flush=True)
         subprocess.run(['git', 'tag', f'v{version}{version_tag}'])
         print(f"done.")
 
