@@ -258,9 +258,12 @@ def package(
 
     # 3.3. bonus addtional libs
     for dir in quick_copy_dirs:
-        print(f"  ++ copying package contents -> {dir} ... ", end='', flush=True)
-        shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
-        print(f"done.")
+        try:
+            print(f"  ++ copying package contents -> {dir} ... ", end='', flush=True)
+            shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
+            print(f"done.")
+        except Exception as e:
+            print(f"error {e}")
 
     # 4. Zip packaged archive
     if no_archive:
@@ -284,9 +287,12 @@ def package(
         archive_file_callback(oname_platform)
 
     for dir in archive_copy_dirs:
-        print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
-        shutil.copy(oname_platform, dir)
-        print(f"done.")
+        try:
+            print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
+            shutil.copy(oname_platform, dir)
+            print(f"done.")
+        except Exception as e:
+            print(f"error {e}")
 
     if auto_git_tag:
         print(f"info: tagging git repository with {version} ... ", end='', flush=True)
