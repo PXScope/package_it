@@ -266,9 +266,14 @@ def package(
             print(f"error {e}")
 
     # 4. Zip packaged archive
+    retval = PackageResult(
+        oname=oname_platform,
+        pkg_dir=pkg_dir
+    )
+
     if no_archive:
         print('info: skipping archive creation ... ')
-        return
+        return retval
 
     print(f"info: archiving output package to {oname} ... ", end='', flush=True)
 
@@ -299,7 +304,4 @@ def package(
         subprocess.run(['git', 'tag', f'v{version}{version_tag}'])
         print(f"done.")
 
-    return PackageResult(
-        oname=oname_platform,
-        pkg_dir=pkg_dir
-    )
+    return retval
