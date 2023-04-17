@@ -121,6 +121,7 @@ def package(
     Run packaging script
 
     Mapping rule:
+        - ["path_name"]: Copy path into destination's root directory
         - ["dir_name", "changed_dir_name"]: Copy directory contents into changed directory name
         - ["dir_name", "parent_dir_name/"]: Copy directory contents under parent directory
         - ["file_name", "changed_file_name"]: Copy file into changed file name
@@ -135,6 +136,15 @@ def package(
     :return: None
     """
     time_begin = time()
+
+    # validate params -> substitute empty destination to root ('/')
+    for i in range(len(mapping)):
+        arg = mapping[i]
+        if len(arg) == 1:
+            arg += ['/']
+
+        if arg[1] == '':
+            arg[1] = '/'
 
     # initialize arguments
     opt = arg_init if arg_init is not None else ArgInit()
