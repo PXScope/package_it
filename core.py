@@ -1,5 +1,6 @@
 
 #!/usr/bin/env python3
+import io
 import argparse
 import glob
 import shutil
@@ -7,7 +8,7 @@ import os
 import platform
 import subprocess
 import sys
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Dict
 from pathlib import Path
 
 def cd_to_here(file, chdir_offset: str = None):
@@ -92,6 +93,13 @@ class PackageResult:
         self.oname = oname
         self.pkg_dir = pkg_dir
 
+class FileCopyFilterArgs:
+    def __init__(self, source_key: str, file_name: str, src_file: io.FileIO, dst_file: io.FileIO) -> None:
+        self.source_key = source_key
+        self.file_name = file_name
+        self.src_file = src_file
+        self.dst_file = dst_file
+
 def package(
     prefix: str,
     out_name: str,
@@ -105,6 +113,8 @@ def package(
     build_callback: Callable[[], int] = None,
     package_dir_callback: Callable[[str], None] = None,
     archive_file_callback: Callable[[str], None] = None,
+
+    copy_filters: Dict[str, Callable[[FileCopyFilterArgs], None]] = None,
 
     no_archive: bool = False,
     no_build: bool = False,
@@ -188,20 +198,20 @@ def package(
                     prefix_excluded = file[len(prefix):]
 
                     # Append it to destination path
-                    new_mapping.append([str(file), dst + prefix_excluded])
+                    new_mapping.append([str(file), dst + prefix_excluded, src])
             else:
                 # Collect GLOBed sources ...
                 for file in glob.glob(src):
-                    new_mapping.append([str(file), dst])
+                    new_mapping.append([str(file), dst, src])
         else:
-            new_mapping.append([src, dst])
+            new_mapping.append([src, dst, src])
 
     # Replace mapping with globbed one.
     mapping = new_mapping
 
     # Unroll directories into files
     unpacked = []
-    for _, (src, dst) in zip(range(len(mapping)), mapping):
+    for _, (src, dst, src_key) in zip(range(len(mapping)), mapping):
         if os.path.isfile(src):
             continue
 
@@ -211,12 +221,16 @@ def package(
         for root, _, files in os.walk(src):
             dst_root = os.path.relpath(root, src)
             for file in files:
-                unpacked.append((os.path.join(root, file), os.path.join(dst, dst_root) + '/'))
+                unpacked.append((
+                    os.path.join(root, file),
+                    os.path.join(dst, dst_root) + '/',
+                    src_key
+                ))
 
     mapping += unpacked
 
     # 3. Collect files to tempdir
-    for index, (src, dst) in zip(range(len(mapping)), mapping):
+    for index, (src, dst, src_key) in zip(range(len(mapping)), mapping):
         print(f"-- [{index+1}/{len(mapping)}] ", end="")
 
         if dst[-1] == '/':
@@ -242,7 +256,12 @@ def package(
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         print("done.")
 
-        shutil.copy(src, dst)
+        if copy_filters and src_key in copy_filters:
+            with (open(src, 'rb'), open(dst, 'wb')) as (src_file, dst_file):
+                args = FileCopyFilterArgs(src_key, src, src_file, dst_file)
+                copy_filters[src_key](args)
+        else:
+            shutil.copy(src, dst)
 
     # 3.1. Exclude all non-targets
     for non_target in non_targets:
