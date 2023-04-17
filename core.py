@@ -8,6 +8,7 @@ import os
 import platform
 import subprocess
 import sys
+from time import time
 from typing import Callable, List, Tuple, Dict
 from pathlib import Path
 
@@ -38,6 +39,9 @@ class ArgInit:
                 '--overwrite', action='store_true',
                 help='Overwrite exsiting archive')
             parser.add_argument(
+                '--invalidate-all', action='store_true',
+                help='Invalidates all existing caches')
+            parser.add_argument(
                 '--no-clean', action='store_true',
                 help='Do not clean up unpacked content')
             parser.add_argument(
@@ -57,6 +61,7 @@ class ArgInit:
             self.no_archive: bool = args.no_archive
             self.no_build: bool = args.no_build
             self.overwrite: bool = args.overwrite
+            self.invalidate_all: bool = args.invalidate_all
             self.no_clean: bool = args.no_clean
             self.auto_git_tag: bool = args.git_tag
             self.allow_empty_dir: bool = args.allow_empty_dir
@@ -67,6 +72,7 @@ class ArgInit:
             self.no_archive: bool = False
             self.no_build: bool = False
             self.overwrite: bool = False
+            self.invalidate_all = False
             self.no_clean: bool = False
             self.auto_git_tag: bool = False
             self.allow_empty_dir: bool = False
@@ -126,6 +132,7 @@ def package(
 
     :return: None
     """
+    time_begin = time()
 
     # initialize arguments
     opt = arg_init if arg_init is not None else ArgInit()
@@ -224,7 +231,11 @@ def package(
 
         try:
             # Skip by comparing mtime ...
-            if os.path.isdir(src) or os.path.getmtime(src) < os.path.getmtime(dst):
+            if os.path.isdir(src):
+                print(f"Directory: {dst_src}")
+                continue
+
+            if not opt.invalidate_all and os.path.getmtime(src) < os.path.getmtime(dst):
                 print(f"Up-to-date: {dst_src}")
                 continue
         except:
@@ -235,7 +246,7 @@ def package(
         print("done.")
 
         if copy_filters and src_key in copy_filters:
-            with (open(src, 'rb'), open(dst, 'wb')) as (src_file, dst_file):
+            with open(src, 'r') as src_file, open(dst, 'w') as dst_file:
                 args = FileCopyFilterArgs(src_key, src, src_file, dst_file)
                 copy_filters[src_key](args)
         else:
@@ -271,6 +282,7 @@ def package(
 
     if opt.no_archive:
         print('info: skipping archive creation ... ')
+        print(f"done. packaging took {time() - time_begin:.2} seconds")
         return retval
 
     print(f"info: archiving output package to {oname} ... ", end='', flush=True)
@@ -300,5 +312,5 @@ def package(
         print(f"info: tagging git repository with {version}{version_tag} ... ", end='', flush=True)
         subprocess.run(['git', 'tag', f'v{version}{version_tag}'])
 
-    print(f"done.")
+    print(f"done. packaging took {time() - time_begin:.2f} seconds")
     return retval
