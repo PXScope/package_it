@@ -11,7 +11,7 @@ import sys
 from typing import Callable, List, Tuple, Dict
 from pathlib import Path
 
-def chdir_file_path(file, chdir_offset: str = None):
+def chdir_to_file(file, chdir_offset: str = None):
     '''
     Changes current working directory to the directory of the file.
     '''
@@ -107,7 +107,7 @@ def package(
 
     copy_filters: Dict[str, Callable[[FileCopyFilterArgs], None]] = None,
 
-    opt: ArgInit = None,
+    arg_init: ArgInit = None,
 ) -> PackageResult or None:
     """
     Run packaging script
@@ -127,9 +127,10 @@ def package(
     :return: None
     """
 
-    if args is None:
-        args = ArgInit()
+    # initialize arguments
+    opt = arg_init if arg_init is not None else ArgInit()
 
+    # initialzie necessary variables
     version_tag = opt.version_suffix if opt.version_suffix is not None else ''
     oname = f"{result_dir}/archive/{out_name}-{version}{version_tag}-{prefix}-{platform.system()}-{platform.release()}"
     pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}-{prefix}"
