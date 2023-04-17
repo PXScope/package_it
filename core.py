@@ -107,6 +107,8 @@ def package(
     quick_copy_dirs: List[str] = [],
     archive_copy_dirs: List[str] = [],
 
+    print: any = print,
+
     build_callback: Callable[[], int] = None,
     package_dir_callback: Callable[[str], None] = None,
     archive_file_callback: Callable[[str], None] = None,
