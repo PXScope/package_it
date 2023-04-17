@@ -7,7 +7,6 @@ import shutil
 import os
 import platform
 import subprocess
-import sys
 from time import time
 from typing import Callable, List, Tuple, Dict
 from pathlib import Path
