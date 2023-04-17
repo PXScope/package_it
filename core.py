@@ -25,8 +25,9 @@ class ArgInit:
     '''
     Additional packaging arguments which can be acquired from argument parser
     '''
-    def __init__(self, parser: argparse.ArgumentParser = None) -> None:
-        if parser is not None:
+    def __init__(self, parser_profile: argparse.ArgumentParser or str) -> None:
+        if type(parser_profile) is argparse.ArgumentParser:
+            parser = parser_profile
             parser.add_argument(
                 'prefix', help='A mandatory build type prefix string')
             parser.add_argument(
@@ -57,7 +58,7 @@ class ArgInit:
 
             args = parser.parse_args()
             self.args = args
-            self.prefix: str = args.prefix
+            self.profile: str = args.prefix
             self.no_archive: bool = args.no_archive
             self.no_build: bool = args.no_build
             self.overwrite: bool = args.overwrite
@@ -66,9 +67,9 @@ class ArgInit:
             self.auto_git_tag: bool = args.git_tag
             self.allow_empty_dir: bool = args.allow_empty_dir
             self.version_suffix: str or None = args.version_suffix
-        else:
+        elif type(parser_profile) is str:
+            self.profile: str = parser_profile
             self.args = None
-            self.prefix: str = ""
             self.no_archive: bool = False
             self.no_build: bool = False
             self.overwrite: bool = False
@@ -77,6 +78,8 @@ class ArgInit:
             self.auto_git_tag: bool = False
             self.allow_empty_dir: bool = False
             self.version_suffix: str or None = None
+        else:
+            raise TypeError("parser_profile must be either argparse.ArgumentParser or str")
 
 class PackageResult:
     '''
@@ -98,7 +101,7 @@ class FileCopyFilterArgs:
         self.dst_file = dst_file
 
 def package(
-    prefix: str,
+    opt: ArgInit,
     out_name: str,
     version: str,
     mapping: List[Tuple[str, str]],
@@ -114,8 +117,6 @@ def package(
     archive_file_callback: Callable[[str], None] = None,
 
     copy_filters: Dict[str, Callable[[FileCopyFilterArgs], None]] = None,
-
-    arg_init: ArgInit = None,
 ) -> PackageResult or None:
     """
     Run packaging script
@@ -147,7 +148,7 @@ def package(
             arg[1] = '/'
 
     # initialize arguments
-    opt = arg_init if arg_init is not None else ArgInit()
+    prefix = opt.profile
 
     # initialzie necessary variables
     version_tag = opt.version_suffix if opt.version_suffix is not None else ''
