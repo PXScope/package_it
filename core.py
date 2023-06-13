@@ -1,5 +1,6 @@
 
 #!/usr/bin/env python3
+from dataclasses import dataclass
 import io
 import argparse
 import glob
@@ -10,6 +11,12 @@ import subprocess
 from time import time
 from typing import Callable, List, Tuple, Dict
 from pathlib import Path
+
+@dataclass()
+class BumpVersion:
+    major: bool
+    minor: bool
+    patch: bool
 
 def chdir_to_file(file, chdir_offset: str = None):
     '''
@@ -24,9 +31,17 @@ class ArgInit:
     '''
     Additional packaging arguments which can be acquired from argument parser
     '''
-    def __init__(self, parser_profile: argparse.ArgumentParser or str) -> None:
-        if type(parser_profile) is argparse.ArgumentParser:
-            parser = parser_profile
+    def __init__(
+        self,
+            parser_or_profile_val: argparse.ArgumentParser or str = None,
+            define_bump_version=False,
+    ) -> None:
+        if parser_or_profile_val is None:
+            parser_or_profile_val = argparse.ArgumentParser()
+
+        if type(parser_or_profile_val) is argparse.ArgumentParser:
+            # ------------------------------------ Definition ------------------------------------ #
+            parser = parser_or_profile_val
             parser.add_argument(
                 'prefix', help='A mandatory build type prefix string')
             parser.add_argument(
@@ -55,6 +70,23 @@ class ArgInit:
                 help='Allow empty directory result'
             )
 
+            if define_bump_version:
+                parser.add_argument(
+                    '--bump-major', action='store_true',
+                    help='Bump major version number'
+                )
+
+                parser.add_argument(
+                    '--bump-minor', action='store_true',
+                    help='Bump minor version number'
+                )
+
+                parser.add_argument(
+                    '--bump-patch', action='store_true',
+                    help='Bump patch version number'
+                )
+
+            # -------------------------------------- Parsing ------------------------------------- #
             args = parser.parse_args()
             self.args = args
             self.profile: str = args.prefix
@@ -66,8 +98,16 @@ class ArgInit:
             self.auto_git_tag: bool = args.git_tag
             self.allow_empty_dir: bool = args.allow_empty_dir
             self.version_suffix: str or None = args.version_suffix
-        elif type(parser_profile) is str:
-            self.profile: str = parser_profile
+
+            if define_bump_version:
+                self.bump_version = BumpVersion(
+                    major=args.bump_major,
+                    minor=args.bump_minor,
+                    patch=args.bump_patch
+                )
+
+        elif type(parser_or_profile_val) is str:
+            self.profile: str = parser_or_profile_val
             self.args = None
             self.no_archive: bool = False
             self.no_build: bool = False
@@ -107,6 +147,8 @@ def package(
     result_dir: str,
 
     quick_copy_dirs: List[str] = [],
+
+    tree_copy_dirs: List[str] = [],
     archive_copy_dirs: List[str] = [],
 
     print: any = print,
@@ -116,6 +158,8 @@ def package(
     archive_file_callback: Callable[[str], None] = None,
 
     copy_filters: Dict[str, Callable[[FileCopyFilterArgs], None]] = None,
+
+    git_tag_prefix: str = None,
 ) -> PackageResult or None:
     """
     Run packaging script
@@ -132,10 +176,12 @@ def package(
     :param out_name: Output names
     :param mapping: Mapping of files to copy
     :param build_callback: Callback to run build script
+    :param quick_copy_dirs: DEPRECATED, use `tree_copy_dirs` instead
 
     :return: None
     """
     time_begin = time()
+    tree_copy_dirs += quick_copy_dirs
 
     # validate params -> substitute empty destination to root ('/')
     for i in range(len(mapping)):
@@ -278,6 +324,10 @@ def package(
 
     # 3.3. bonus addtional libs
     for dir in quick_copy_dirs:
+        if len(dir) == 0:
+            print(f"  -- warn: skipping empty quick_copy_dir ... ")
+            continue
+
         try:
             print(f"  ++ copying package contents -> {dir} ... ", end='', flush=True)
             shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
@@ -313,6 +363,10 @@ def package(
         archive_file_callback(oname_platform)
 
     for dir in archive_copy_dirs:
+        if len(dir) == 0:
+            print(f"  -- warn: skipping empty archive_copy_dir ... ")
+            continue
+
         try:
             print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
             shutil.copy(oname_platform, dir)
@@ -321,8 +375,10 @@ def package(
             print(f"error {e}")
 
     if opt.auto_git_tag:
-        print(f"info: tagging git repository with {version}{version_tag} ... ", end='', flush=True)
-        subprocess.run(['git', 'tag', f'v{version}{version_tag}'])
+        tag = f'{f"{git_tag_prefix}-" if git_tag_prefix else None}v{version}{version_tag}'
+
+        print(f"info: tagging git repository with {tag} ... ", end='', flush=True)
+        subprocess.run(['git', 'tag', tag])
 
     print(f"done. packaging took {time() - time_begin:.2f} seconds")
     return retval

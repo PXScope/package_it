@@ -2,12 +2,12 @@ import os
 from setuptools import setup, find_packages
 
 INSTALL_REQUIRES = [
-    "toml>=0.10",
+    "tomlkit>=0.11"
 ]
 
 setup(
     name="package_it",
-    version="0.1.0",
+    version="0.2.0",
     python_requires=">=3.7.0",
     author="Seungwoo Kang",
     author_email="swkang@pxscope.com",
