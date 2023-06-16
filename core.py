@@ -126,6 +126,7 @@ class PackageResult:
     '''
     def __init__(self, oname: str, pkg_dir: str, version: str) -> None:
         self.oname = oname
+        self.output_archive = oname
         self.pkg_dir = pkg_dir
         self.version = version
 
