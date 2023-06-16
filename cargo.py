@@ -3,7 +3,7 @@ import tomlkit
 from package_it.core import BumpVersion
 
 def get_version(src_dir: str) -> str:
-    version_control(src_dir)
+    return version_control(src_dir)
 
 def version_control(
         src_dir: str,
