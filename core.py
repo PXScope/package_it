@@ -69,6 +69,10 @@ class ArgInit:
                 '--git-tag', action='store_true',
                 help='Allow empty directory result'
             )
+            parser.add_argument(
+                '--override-architecture', '-A', dest='override_arch', default=None, type=str,
+                help='Override architecture string (x86_64-Windows-....)'
+            )
 
             if define_bump_version:
                 parser.add_argument(
@@ -98,6 +102,7 @@ class ArgInit:
             self.auto_git_tag: bool = args.git_tag
             self.allow_empty_dir: bool = args.allow_empty_dir
             self.version_suffix: str or None = args.version_suffix
+            self.override_arch: str or None = args.override_arch
 
             if define_bump_version:
                 self.bump_version = BumpVersion(
@@ -117,6 +122,7 @@ class ArgInit:
             self.auto_git_tag: bool = False
             self.allow_empty_dir: bool = False
             self.version_suffix: str or None = None
+            self.override_arch: str or None = None
         else:
             raise TypeError("parser_profile must be either argparse.ArgumentParser or str")
 
@@ -198,10 +204,15 @@ def package(
 
     # initialzie necessary variables
     version_tag = opt.version_suffix if opt.version_suffix is not None else ''
-    oname = f"{result_dir}/archive/{out_name}-{version}{version_tag}-{prefix}-{platform.system()}-{platform.release()}"
+    arch_str = (
+        f'{platform.system()}-{platform.release()}'
+        if opt.override_arch is None
+        else opt.override_arch
+    )
+    oname = f"{result_dir}/archive/{out_name}-{version}{version_tag}-{prefix}-{arch_str}"
     pkg_dir = f"{result_dir}/{platform.system()}-{platform.release()}/{out_name}-{prefix}"
 
-    oname_platform = oname + (".zip" if platform.system() == "Windows" else ".tar.gz")
+    oname_platform = oname + '.' + ("zip" if platform.system() == "Windows" else "tar.gz")
 
     if not opt.overwrite and not opt.no_archive and os.path.exists(oname_platform):
         raise Exception(f'fatal: File already exists: {oname}')
