@@ -166,7 +166,7 @@ def package(
 
     copy_filters: Dict[str, Callable[[FileCopyFilterArgs], None]] = None,
 
-    git_tag_prefix: str = 'v',
+    git_tag_prefix: str = None,
 ) -> PackageResult or None:
     """
     Run packaging script
@@ -387,7 +387,7 @@ def package(
             print(f"error {e}")
 
     if opt.auto_git_tag:
-        tag = f'{f"{git_tag_prefix}-" if git_tag_prefix else None}v{version}{version_tag}'
+        tag = f'{f"{git_tag_prefix}-" if git_tag_prefix else ""}v{version}{version_tag}'
 
         print(f"info: tagging git repository with {tag} ... ", end='', flush=True)
         subprocess.run(['git', 'tag', tag])
