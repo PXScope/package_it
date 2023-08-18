@@ -166,7 +166,7 @@ def package(
 
     copy_filters: Dict[str, Callable[[FileCopyFilterArgs], None]] = None,
 
-    git_tag_prefix: str = None,
+    git_tag_prefix: str = 'v',
 ) -> PackageResult or None:
     """
     Run packaging script
