@@ -177,18 +177,21 @@ def package(
         - ["dir_name", "parent_dir_name/"]: Copy directory contents under parent directory
         - ["file_name", "changed_file_name"]: Copy file into changed file name
         - ["file_name", "parent_dir_name/"]: Copy file under parent directory
-        - ["file_name_with_glob", "parent_dir_name/"]: Copy all files that match glob under parent directory
+        - ["file_name_with_glob", "parent_dir_name/"]: Copy all files that match glob under parent
+          directory
 
     :param src_dir: Source directory
     :param out_name: Output names
     :param mapping: Mapping of files to copy
     :param build_callback: Callback to run build script
-    :param quick_copy_dirs: DEPRECATED, use `tree_copy_dirs` instead
+    :param tree_copy_dirs: Copy package contents to specified directories.
+    :param quick_copy_dirs: Old method of `tree_copy_dirs`, which copies `out_name` directory to
+        specified directories.
 
     :return: None
     """
     time_begin = time()
-    tree_copy_dirs += quick_copy_dirs
+    quick_copy_dirs
 
     # validate params -> substitute empty destination to root ('/')
     for i in range(len(mapping)):
@@ -335,7 +338,8 @@ def package(
                 os.rmdir(root)
 
     # 3.3. bonus addtional libs
-    for dir in tree_copy_dirs:
+    print(f"info: quick-copying {len(quick_copy_dirs)} directories ...")
+    for dir in quick_copy_dirs:
         if len(dir) == 0:
             print(f"  -- warn: skipping empty quick_copy_dir ... ")
             continue
@@ -343,6 +347,19 @@ def package(
         try:
             print(f"  ++ copying package contents -> {dir} ... ", end='', flush=True)
             shutil.copytree(pkg_dir, dir, dirs_exist_ok=True)
+            print(f"done.")
+        except Exception as e:
+            print(f"error {e}")
+
+    print(f"info: tree-copying {len(tree_copy_dirs)} directories ...")
+    for dir in tree_copy_dirs:
+        if len(dir) == 0:
+            print(f"  -- warn: skipping empty tree_copy_dir ... ")
+            continue
+
+        try:
+            print(f"  ++ copying package inner contents -> {dir} ... ", end='', flush=True)
+            shutil.copytree(f"{pkg_dir}/{out_name}/", dir, dirs_exist_ok=True)
             print(f"done.")
         except Exception as e:
             print(f"error {e}")
