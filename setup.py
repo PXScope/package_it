@@ -7,7 +7,7 @@ INSTALL_REQUIRES = [
 
 setup(
     name="package_it",
-    version="0.2.2",
+    version="0.2.3",
     python_requires=">=3.7.0",
     author="Seungwoo Kang",
     author_email="swkang@pxscope.com",

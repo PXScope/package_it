@@ -354,37 +354,35 @@ def package(
         version=version,
     )
 
-    if opt.no_archive:
-        print('info: skipping archive creation ... ')
-        print(f"done. packaging took {time() - time_begin:.2} seconds")
-        return retval
-
-    print(f"info: archiving output package to {oname} ... ", end='', flush=True)
-
-    os.makedirs(f'{result_dir}/archive', exist_ok=True)
-    shutil.make_archive(
-        oname,
-        "zip" if platform.system() == "Windows" else "gztar",
-        pkg_dir
-    )
-
     if package_dir_callback:
         package_dir_callback(pkg_dir)
 
-    if archive_file_callback:
-        archive_file_callback(oname_platform)
+    if not opt.no_archive:
+        print(f"info: archiving output package to {oname} ... ", end='', flush=True)
 
-    for dir in archive_copy_dirs:
-        if len(dir) == 0:
-            print(f"  -- warn: skipping empty archive_copy_dir ... ")
-            continue
+        os.makedirs(f'{result_dir}/archive', exist_ok=True)
+        shutil.make_archive(
+            oname,
+            "zip" if platform.system() == "Windows" else "gztar",
+            pkg_dir
+        )
 
-        try:
-            print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
-            shutil.copy(oname_platform, dir)
-            print(f"done.")
-        except Exception as e:
-            print(f"error {e}")
+        if archive_file_callback:
+            archive_file_callback(oname_platform)
+
+        for dir in archive_copy_dirs:
+            if len(dir) == 0:
+                print(f"  -- warn: skipping empty archive_copy_dir ... ")
+                continue
+
+            try:
+                print(f"  ++ copying archive -> {dir} ... ", end='', flush=True)
+                shutil.copy(oname_platform, dir)
+                print(f"done.")
+            except Exception as e:
+                print(f"error {e}")
+    else:
+        print(f"info: skipping archiving ... ", end='', flush=True)
 
     if opt.auto_git_tag:
         tag = f'{f"{git_tag_prefix}-" if git_tag_prefix else ""}v{version}{version_tag}'
