@@ -335,7 +335,7 @@ def package(
                 os.rmdir(root)
 
     # 3.3. bonus addtional libs
-    for dir in quick_copy_dirs:
+    for dir in tree_copy_dirs:
         if len(dir) == 0:
             print(f"  -- warn: skipping empty quick_copy_dir ... ")
             continue
